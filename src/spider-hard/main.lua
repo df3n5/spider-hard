@@ -58,12 +58,12 @@ function Spider:init()
     self.legs = {}
     self.legs[0] = {x=15, y=-24}
     self.legs[1] = {x=24, y=-9}
-    self.legs[2] = {x=24, y=-9}
-    self.legs[3] = {x=24, y=-9}
-    self.legs[4] = {x=24, y=-9}
-    self.legs[5] = {x=24, y=-9}
-    self.legs[6] = {x=24, y=-9}
-    self.legs[7] = {x=24, y=-9}
+    self.legs[2] = {x=24, y=10}
+    self.legs[3] = {x=15, y=22}
+    self.legs[4] = {x=-18, y=22}
+    self.legs[5] = {x=-26, y=10}
+    self.legs[6] = {x=-26, y=-9}
+    self.legs[7] = {x=-13, y=-24}
 end
 
 function checkQuit()
