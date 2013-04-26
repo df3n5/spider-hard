@@ -151,8 +151,7 @@ end
 function ui()
 end
 
--- Do some drawing here.
-function love.draw()
+function drawGame()
     spider:draw()
     man:draw()
     target:draw()
@@ -198,33 +197,53 @@ function love.load()
     target = Target:new{pos={x=100,y=200},image="target.png"}
     target:init()
     -- Set bg
+    --love.graphics.setBackgroundColor(155, 100, 100)
     love.graphics.setBackgroundColor(155, 100, 100)
     -- Howto load sound
     bounce = loadSound("bounce.wav")
     events = {}
     logger = Logger:new()
     anims = {}
+    titleImage = love.graphics.newImage("title.png")
+    inTitle = true
+end
+
+-- Do some drawing here.
+function love.draw()
+    if(inTitle) then
+        love.graphics.draw(titleImage, 
+            0, 
+            0)
+    else
+        drawGame()
+    end
 end
 
 function love.keypressed(key)
-    leg = target.currentLeg
-    if key == "`" then
-        logger.visible = not logger.visible
-    elseif key == "1" then
-        leg = leg + 1
-        if(leg > 8) then
-            leg = 1
+    if(inTitle) then
+        if key == " " then
+            inTitle=false
         end
-    elseif key == "2" then
-        leg = leg - 1
-        if(leg < 1) then
-            leg = 8
+    else
+        leg = target.currentLeg
+        if key == "`" then
+            logger.visible = not logger.visible
+        elseif key == "1" then
+            leg = leg + 1
+            if(leg > 8) then
+                leg = 1
+            end
+        elseif key == "2" then
+            leg = leg - 1
+            if(leg < 1) then
+                leg = 8
+            end
+        elseif key == "return" then
+            man:fire(spider, target.currentLeg)
         end
-    elseif key == "return" then
-        man:fire(spider, target.currentLeg)
+        target.currentLeg = leg
+        target:setTarget(spider.centrePos, spider.legs[target.currentLeg])
     end
-    target.currentLeg = leg
-    target:setTarget(spider.centrePos, spider.legs[target.currentLeg])
 end
 
 function love.update(dt)
