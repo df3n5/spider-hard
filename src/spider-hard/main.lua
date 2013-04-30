@@ -12,7 +12,8 @@ Sprite = {image="",
     rot=0,
     scale={x=1, y=1},
     halfDims={w=0, h=0},
-    currentLeg=1}
+    currentLeg=1,
+    visible=true}
 
 function Sprite:new(o)
     return ObjectNew(o, self)
@@ -28,14 +29,16 @@ function Sprite:init()
 end
 
 function Sprite:draw()
-    love.graphics.draw(self.sprite, 
-        self.pos.x, 
-        self.pos.y, 
-        self.rot, 
-        self.scale.x,
-        self.scale.y, 
-        self.halfDims.w, 
-        self.halfDims.h)
+    if(self.visible) then
+        love.graphics.draw(self.sprite, 
+            self.pos.x, 
+            self.pos.y, 
+            self.rot, 
+            self.scale.x,
+            self.scale.y, 
+            self.halfDims.w, 
+            self.halfDims.h)
+    end
 end
 
 function Sprite:setPos(pos)
@@ -60,6 +63,7 @@ Spider = Sprite:new()
 
 function Spider:init()
     Sprite.init(self)
+    self.visible = true
     self.legs = {}
     self.legs[1] = {x=15, y=-24}
     self.legs[2] = {x=24, y=-9}
@@ -161,7 +165,7 @@ function drawGame()
     ui()
     while #events > 0 do
         event = table.remove(events)
-        local animTime = 0.5
+        local animTime = 0.3
         if event == "SPIDER_LEG_DEAD" then
             local img = love.graphics.newImage("anim_spider_good.png")
             local anim = newAnimation(img, 64, 64, animTime, 0)
@@ -184,7 +188,10 @@ function drawGame()
     end
     --Check for win condition
     if win and ended then
-        love.graphics.print("YOU WIN", 350, 100)
+        -- wait until anim done completely
+        if(#anims == 0) then
+            love.graphics.print("YOU WIN", 350, 100)
+        end
     end
     logger:draw()
 end
@@ -278,5 +285,6 @@ function love.update(dt)
     if spider.health <= 0 then
         win = true
         ended = true
+        spider.visible=false
     end
 end
