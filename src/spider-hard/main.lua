@@ -71,20 +71,24 @@ function Spider:init()
     self.legs[8] = {x=-13, y=-24}
     -- TODO: Randomise this
     self.weakestLeg = 1
-    self.legHealth = {}
-    for i=1,8 do
-        self.legHealth[i] = 1
-    end
+    self.health = 3
+    --self.legHealth = {}
+    --for i=1,8 do
+    --    self.legHealth[i] = 1
+    --end
 end
 
 Man = Sprite:new()
 
 function Man:fire(spider, leg)
     logger:d(string.format("In man:fire leg is %d weakest is %d", leg, spider.weakestLeg))
+    laser = loadSound("laser.ogg")
+    laser:play()
     local nearDelta = 1
     if(spider.weakestLeg == leg) then
         -- We have a successful hit.
-        spider.legHealth[leg] = 0
+        --spider.legHealth[leg] = spider.health - 1
+        spider.health = spider.health - 1
         table.insert(events, "SPIDER_LEG_DEAD")
     elseif(((spider.weakestLeg >= (leg - nearDelta)) and (spider.weakestLeg <= (leg + nearDelta)))
         or (spider.weakestLeg==1 and leg==8) or (spider.weakestLeg==8 and leg==1)) then
@@ -101,7 +105,7 @@ Logger = { logs={},
     maxLogs=100,
     startPos={x=0,y=0},
     logYDelta=14,
-    visible=true}
+    visible=false}
 
 function Logger:new(o)
     return ObjectNew(o, self)
@@ -136,7 +140,6 @@ end
 
 function checkQuit()
     if love.keyboard.isDown("escape") then
-        love.graphics.print("It's a quitting time.", 400, 300)
         love.event.quit()
     end
 end
@@ -160,19 +163,16 @@ function drawGame()
         event = table.remove(events)
         local animTime = 0.5
         if event == "SPIDER_LEG_DEAD" then
-            love.graphics.print("SPIDER_LEG_DEAD", 0, 0)
             local img = love.graphics.newImage("anim_spider_good.png")
             local anim = newAnimation(img, 64, 64, animTime, 0)
             anim:setMode("once")
             table.insert(anims, {pos=spider.pos, anim=anim})
         elseif event == "SPIDER_LEG_ALMOST_DEAD" then
-            love.graphics.print("SPIDER_LEG_ALMOST_DEAD", 0, 0)
             local img = love.graphics.newImage("anim_spider_med.png")
             local anim = newAnimation(img, 64, 64, animTime, 0)
             anim:setMode("once")
             table.insert(anims, {pos=spider.pos, anim=anim})
         elseif event == "SPIDER_LEG_MISS" then
-            love.graphics.print("SPIDER_LEG_MISS", 0, 0)
             local img = love.graphics.newImage("anim_spider_bad.png")
             local anim = newAnimation(img, 64, 64, animTime, 0)
             anim:setMode("once")
@@ -181,6 +181,10 @@ function drawGame()
     end
     for i = 1, #anims do
         anims[i].anim:draw(anims[i].pos.x - 15, anims[i].pos.y - 15)
+    end
+    --Check for win condition
+    if win and ended then
+        love.graphics.print("YOU WIN", 350, 100)
     end
     logger:draw()
 end
@@ -206,6 +210,9 @@ function love.load()
     anims = {}
     titleImage = love.graphics.newImage("title.png")
     inTitle = true
+    win = false
+    ended = false 
+    mainFont = love.graphics.setNewFont("Vdj.ttf", 14);
 end
 
 -- Do some drawing here.
@@ -219,30 +226,41 @@ function love.draw()
     end
 end
 
+
 function love.keypressed(key)
     if(inTitle) then
         if key == " " then
             inTitle=false
         end
     else
-        leg = target.currentLeg
-        if key == "`" then
-            logger.visible = not logger.visible
-        elseif key == "1" then
-            leg = leg + 1
-            if(leg > 8) then
-                leg = 1
+        if ended then
+            if key == " " then
+                spider:init()
+                man:init()
+                target:init()
+                ended = false
+                win = false
             end
-        elseif key == "2" then
-            leg = leg - 1
-            if(leg < 1) then
-                leg = 8
+        else
+            leg = target.currentLeg
+            if key == "tab" then
+                logger.visible = not logger.visible
+            elseif key == "down" or key=="right" then
+                leg = leg + 1
+                if(leg > 8) then
+                    leg = 1
+                end
+            elseif key == "up" or key=="left" then
+                leg = leg - 1
+                if(leg < 1) then
+                    leg = 8
+                end
+            elseif key == " " then
+                man:fire(spider, target.currentLeg)
             end
-        elseif key == "return" then
-            man:fire(spider, target.currentLeg)
+            target.currentLeg = leg
+            target:setTarget(spider.centrePos, spider.legs[target.currentLeg])
         end
-        target.currentLeg = leg
-        target:setTarget(spider.centrePos, spider.legs[target.currentLeg])
     end
 end
 
@@ -254,5 +272,11 @@ function love.update(dt)
         if not anims[i].anim.playing then
             table.remove(anims, i)
         end
+    end
+
+    --Check for win condition
+    if spider.health <= 0 then
+        win = true
+        ended = true
     end
 end
